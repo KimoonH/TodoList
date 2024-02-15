@@ -11,11 +11,31 @@
 
 let taskInput = document.getElementById("task-input")
 let addButton = document.getElementById("add-button")
+let tabs = document.querySelectorAll(".task-tap div") // 처음 써보는 함수
+let underLine = document.getElementById("under-line");
 let taskList = []
+let mode = 'all'; //mode를 전역변수로 전환!
+let filterList = []
 
 addButton.addEventListener("click", addTask)
+taskInput.addEventListener("keydown", function (event) {
+    if (event.keyCode === 13) {
+        addTask(event);
+    }
+});
+
+for (let i = 1; i < tabs.length; i++) {
+    tabs[i].addEventListener("click", function (event) {
+        filter(event)
+    })
+}
+
+console.log(tabs)
 
 function addTask() {
+    // 할일 입력해주세요.
+    let taskValue = taskInput.value;
+    if (taskValue == "") return alert ("오늘은 뭐할까?")
     let task = {
         id:randomIDGenerate(),
         taskContent: taskInput.value,
@@ -24,27 +44,39 @@ function addTask() {
     }
     // 객체가 왜 필요한가? 추가정보를 위해서, 추가 정보를 필요할 때, 필요한 관련 있는 정보를 묶어주는거, 정보를 통해 정의하는 방법.
     taskList.push(task)
-    console.log(taskList)
+    taskInput.value = "";
     render();
 }
-
+// todolist task를 만들어주는 기능
 function render() {
+    // 1. 내가 선택한 탭에 따라서  : mode 변수
+    let list = []
+    if (mode === 'all') {
+        // all = taskList
+        list = taskList;
+    } else if (mode == "ongoing" || mode == "done") {
+        // ongoing, done filterList
+        list = filterList;
+    }
+    // 2. 리스트를 달리 보여준다.
+    // all taskList
+    // ongoing, done에서 filterList
     let resultHTML = '';
-    for (let i = 0; i < taskList.length; i++) {
-        if (taskList[i].isComplete == true) {
+    for (let i = 0; i < list.length; i++) {
+        if (list[i].isComplete == true) {
             resultHTML+= `<div class="task">
-            <div class="task-done">${taskList[i].taskContent}</div>
+            <div class="task-done">${list[i].taskContent}</div>
             <div>
-                <button onclick ="toggleComplete('${taskList[i].id}')">체크</button> 
-                <button onclick ="deleteTask('${taskList[i].id}')">삭제</button>
+                <button onclick ="toggleComplete('${list[i].id}')">체크</button> 
+                <button onclick ="deleteTask('${list[i].id}')">삭제</button>
             </div>
         </div>`;
         } else {
             resultHTML += `<div class="task">
-            <div>${taskList[i].taskContent}</div>
+            <div>${list[i].taskContent}</div>
             <div>
-                <button onclick ="toggleComplete('${taskList[i].id}')">체크</button> 
-                <button onclick ="deleteTask('${taskList[i].id}')">삭제</button>
+                <button onclick ="toggleComplete('${list[i].id}')">체크</button> 
+                <button onclick ="deleteTask('${list[i].id}')">삭제</button>
             </div>
         </div>`;
         }
@@ -77,6 +109,47 @@ function deleteTask(id) {
         }
     }
     render()
+}
+// 어떤 것을 업데이트 했다면, UI도 같이 업데이트를 해줘야 한다.
+
+// 누구를 클릭했는지에 대한 이벤트
+// 무엇을 클릭 했는지에 대한 기능 구현
+// 우리에게 3가지 케이스가 존재한다.
+
+function filter(event) {
+    // event.target.id가 너무 길어서 변수로 만들어줌.
+    if (event) {
+        mode = event.target.id;
+        underLine.style.width = event.target.offsetWidth + "px";
+        underLine.style.left = event.target.offsetLeft + "px";
+        underLine.style.top =
+        event.target.offsetTop + (event.target.offsetHeight - 4) + "px";
+    } 
+    filterList = []
+
+    if (mode === "all") {
+        // 전체 리스트를 보여준다.
+        render();
+    } else if (mode === "ongoing") {
+        // 진행중인 아이템을 보여준다.
+        // task.isComplete = false
+        for (let i = 0; i < taskList.length; i++){
+            if (taskList[i].isComplete === false) {
+                filterList.push(taskList[i])
+            }
+        }
+        render();
+        console.log("진행중", filterList)
+    } else if (mode === "done") {
+        // 끝나는 케이스
+        // task.isComplete = true
+        for (let i = 0; i < taskList.length; i++){
+            if (taskList[i].isComplete === true) {
+                filterList.push(taskList[i])
+            }
+        }
+        render();
+    }
 }
 
 function randomIDGenerate() {
